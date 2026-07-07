@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFix Admin — Reservas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        .status-pending   { background:#fef3c7; color:#92400e; }
+        .status-confirmed { background:#dbeafe; color:#1e40af; }
+        .status-done      { background:#d1fae5; color:#065f46; }
+        .status-cancelled { background:#fee2e2; color:#991b1b; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ── LOGIN ── -->
+<div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-xl p-10 w-full max-w-sm">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-10 h-10 bg-gradient-to-tr from-cyan-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-snowflake text-white"></i>
+            </div>
+            <span class="text-xl font-bold text-slate-900">SmartFix <span class="text-cyan-500">Admin</span></span>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-800 mb-2">Panel de administración</h2>
+        <p class="text-slate-500 text-sm mb-6">Introduce la contraseña para ver las reservas.</p>
+        <input id="passwordInput" type="password" placeholder="Contraseña"
+               class="w-full border border-slate-200 rounded-xl px-4 py-3.5 text-slate-700 focus:outline-none focus:border-cyan-400 mb-3"
+               onkeydown="if(event.key==='Enter') login()">
+        <p id="loginError" class="text-red-500 text-sm mb-3 hidden">Contraseña incorrecta</p>
+        <button onclick="login()" class="w-full bg-cyan-400 hover:bg-cyan-300 text-black font-bold py-3.5 rounded-xl transition-all">
+            Entrar
+        </button>
+    </div>
+</div>
+
+<!-- ── ADMIN PANEL ── -->
+<div id="adminPanel" class="hidden">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-gradient-to-tr from-cyan-400 to-emerald-400 rounded-xl flex items-center justify-center">
+                <i class="fa-solid fa-snowflake text-white text-sm"></i>
+            </div>
+            <span class="text-lg font-bold text-slate-900">SmartFix <span class="text-cyan-500">Admin</span></span>
+        </div>
+        <div class="flex items-center gap-3">
+            <div id="statsBar" class="hidden md:flex items-center gap-4 text-sm text-slate-500">
+                <span id="statTotal"></span>
+                <span id="statPending"></span>
+                <span id="statDone"></span>
+            </div>
+            <button onclick="exportCSV()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all flex items-center gap-2">
+                <i class="fa-solid fa-download text-xs"></i> CSV
+            </button>
+            <button onclick="loadBookings()" class="px-4 py-2 bg-cyan-400 hover:bg-cyan-300 text-black text-sm font-bold rounded-xl transition-all flex items-center gap-2">
+                <i class="fa-solid fa-rotate-right text-xs"></i> Actualizar
+            </button>
+            <button onclick="logout()" class="px-3 py-2 text-slate-400 hover:text-slate-700 text-sm transition-all">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Filter bar -->
+    <div class="bg-white border-b border-slate-100 px-6 py-3 flex flex-wrap items-center gap-3">
+        <input id="searchInput" oninput="renderTable()" type="text" placeholder="Buscar por nombre, teléfono o matrícula…"
+               class="border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-700 focus:outline-none focus:border-cyan-400 w-64">
+        <select id="filterService" onchange="renderTable()" class="border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-600 focus:outline-none">
+            <option value="">Todos los servicios</option>
+            <option value="ac">Climatización AC</option>
+            <option value="wash">Autolavado</option>
+        </select>
+        <select id="filterStatus" onchange="renderTable()" class="border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-600 focus:outline-none">
+            <option value="">Todos los estados</option>
+            <option value="pending">Pendiente</option>
+            <option value="confirmed">Confirmado</option>
+            <option value="done">Realizado</option>
+            <option value="cancelled">Cancelado</option>
+        </select>
+        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input type="checkbox" id="showPastDays" onchange="renderTable()" class="rounded">
+            Mostrar días pasados
+        </label>
+    </div>
+
+    <!-- Content -->
+    <main class="max-w-7xl mx-auto px-4 py-6" id="bookingsContainer">
+        <div class="text-center text-slate-400 py-20">
+            <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+            <p>Cargando reservas…</p>
+        </div>
+    </main>
+</div>
+
+<script>
+let allBookings = [];
+let adminToken  = '';
+
+// ── Auth ────────────────────────────────────
+function login() {
+    const pwd = document.getElementById('passwordInput').value.trim();
+    if (!pwd) return;
+    adminToken = pwd;
+    loadBookings();
+}
+
+function logout() {
+    adminToken = '';
+    allBookings = [];
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('adminPanel').classList.add('hidden');
+    document.getElementById('passwordInput').value = '';
+}
+
+// ── Data ────────────────────────────────────
+async function loadBookings() {
+    try {
+        const res = await fetch('/api/bookings', {
+            headers: { 'x-admin-token': adminToken }
+        });
+        if (res.status === 401) {
+            document.getElementById('loginError').classList.remove('hidden');
+            return;
+        }
+        document.getElementById('loginError').classList.add('hidden');
+        allBookings = await res.json();
+
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('adminPanel').classList.remove('hidden');
+        document.getElementById('statsBar').classList.remove('hidden');
+
+        updateStats();
+        renderTable();
+    } catch (e) {
+        alert('Error al conectar con el servidor. ¿Está el servidor encendido?');
+    }
+}
+
+async function updateStatus(id, status) {
+    await fetch(`/api/booking/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ status })
+    });
+    const b = allBookings.find(x => x.id === id);
+    if (b) b.status = status;
+    updateStats();
+    renderTable();
+}
+
+async function deleteBooking(id, name) {
+    if (!confirm(`¿Eliminar la reserva de ${name}?`)) return;
+    await fetch(`/api/booking/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': adminToken }
+    });
+    allBookings = allBookings.filter(x => x.id !== id);
+    updateStats();
+    renderTable();
+}
+
+// ── Stats ───────────────────────────────────
+function updateStats() {
+    const total   = allBookings.length;
+    const pending = allBookings.filter(b => b.status === 'pending').length;
+    const done    = allBookings.filter(b => b.status === 'done').length;
+    document.getElementById('statTotal').textContent   = `${total} total`;
+    document.getElementById('statPending').innerHTML   = `<span class="text-amber-600 font-semibold">${pending} pendientes</span>`;
+    document.getElementById('statDone').innerHTML      = `<span class="text-emerald-600 font-semibold">${done} realizados</span>`;
+}
+
+// ── Render ──────────────────────────────────
+function getFiltered() {
+    const search  = document.getElementById('searchInput').value.toLowerCase();
+    const svc     = document.getElementById('filterService').value;
+    const status  = document.getElementById('filterStatus').value;
+    const showPast = document.getElementById('showPastDays').checked;
+    const today   = new Date(); today.setHours(0,0,0,0);
+
+    return allBookings.filter(b => {
+        if (search && !`${b.name}${b.phone}${b.plate}`.toLowerCase().includes(search)) return false;
+        if (svc && b.serviceCategory !== svc) return false;
+        if (status && b.status !== status) return false;
+        return true;
+    });
+}
+
+function renderTable() {
+    const container  = document.getElementById('bookingsContainer');
+    const filtered   = getFiltered();
+    const showPast   = document.getElementById('showPastDays').checked;
+
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-slate-400 py-20">
+                <i class="fa-solid fa-calendar-xmark text-4xl mb-3 block"></i>
+                <p class="text-lg font-semibold">No hay reservas</p>
+                <p class="text-sm mt-1">Las nuevas reservas aparecerán aquí automáticamente.</p>
+            </div>`;
+        return;
+    }
+
+    // Group by date
+    const byDate = {};
+    filtered.forEach(b => {
+        if (!byDate[b.date]) byDate[b.date] = [];
+        byDate[b.date].push(b);
+    });
+
+    // Sort dates
+    const sortedDates = Object.keys(byDate).sort((a, b) => a.localeCompare(b));
+
+    let html = '';
+    const todayStr = getTodayLabel();
+
+    sortedDates.forEach(date => {
+        const bookings = byDate[date].sort((a, b) => a.time.localeCompare(b.time));
+        const count    = bookings.length;
+        const pending  = bookings.filter(b => b.status === 'pending').length;
+
+        const isToday = date === todayStr;
+
+        html += `
+        <div class="mb-8">
+            <!-- Date heading -->
+            <div class="flex items-center gap-3 mb-3">
+                <div class="flex items-center gap-2 ${isToday ? 'bg-cyan-400 text-black' : 'bg-slate-200 text-slate-600'} px-4 py-1.5 rounded-full font-bold text-sm">
+                    ${isToday ? '<i class="fa-solid fa-star text-xs"></i>' : '<i class="fa-regular fa-calendar text-xs"></i>'}
+                    ${date}${isToday ? ' — HOY' : ''}
+                </div>
+                <span class="text-slate-500 text-sm">${count} reserva${count !== 1 ? 's' : ''}${pending > 0 ? ` — <span class="text-amber-600 font-semibold">${pending} pendiente${pending > 1 ? 's' : ''}</span>` : ''}</span>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 border-b border-slate-100">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400 w-16">Hora</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Servicio</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Nombre</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Teléfono</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Matrícula</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Estado</th>
+                            <th class="px-4 py-3 text-left text-xs font-bold uppercase text-slate-400">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
+                        ${bookings.map(b => renderRow(b)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function renderRow(b) {
+    const statusLabel = { pending: 'Pendiente', confirmed: 'Confirmado', done: 'Realizado', cancelled: 'Cancelado' };
+    const svcIcon = b.serviceCategory === 'wash'
+        ? '<i class="fa-solid fa-soap text-emerald-500 mr-1.5"></i>'
+        : '<i class="fa-solid fa-snowflake text-cyan-500 mr-1.5"></i>';
+
+    return `
+    <tr class="hover:bg-slate-50 transition-colors ${b.status === 'done' ? 'opacity-60' : ''} ${b.status === 'cancelled' ? 'opacity-40 line-through' : ''}">
+        <td class="px-4 py-3.5 font-mono font-bold text-slate-800">${b.time}</td>
+        <td class="px-4 py-3.5 text-slate-700">${svcIcon}${b.serviceName || b.service}</td>
+        <td class="px-4 py-3.5 font-medium text-slate-900">${b.name}</td>
+        <td class="px-4 py-3.5 text-slate-600">
+            <a href="tel:${b.phone}" class="hover:text-cyan-600 transition-colors">${b.phone}</a>
+        </td>
+        <td class="px-4 py-3.5">
+            <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-lg font-mono text-xs font-bold">${b.plate}</span>
+        </td>
+        <td class="px-4 py-3.5">
+            <select onchange="updateStatus('${b.id}', this.value)"
+                    class="status-${b.status} text-xs font-bold px-2 py-1 rounded-lg border-0 cursor-pointer focus:outline-none">
+                <option value="pending"   ${b.status === 'pending'   ? 'selected' : ''}>⏳ Pendiente</option>
+                <option value="confirmed" ${b.status === 'confirmed' ? 'selected' : ''}>✅ Confirmado</option>
+                <option value="done"      ${b.status === 'done'      ? 'selected' : ''}>✓ Realizado</option>
+                <option value="cancelled" ${b.status === 'cancelled' ? 'selected' : ''}>✗ Cancelado</option>
+            </select>
+        </td>
+        <td class="px-4 py-3.5">
+            <div class="flex items-center gap-2">
+                <a href="https://wa.me/${b.phone.replace(/\D/g,'')}" target="_blank"
+                   class="w-8 h-8 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center transition-colors" title="WhatsApp">
+                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                </a>
+                <button onclick="deleteBooking('${b.id}', '${b.name}')"
+                        class="w-8 h-8 bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 rounded-lg flex items-center justify-center transition-colors" title="Eliminar">
+                    <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+            </div>
+        </td>
+    </tr>`;
+}
+
+function getTodayLabel() {
+    // Returns "Lunes 7" etc. — matches our booking date format
+    // Since dates in bookings are stored as user-selected strings like "Viernes 10"
+    // we just compare with today's day number for highlighting
+    const today = new Date();
+    const dayNum = today.getDate();
+    const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+    return `${days[today.getDay()]} ${dayNum}`;
+}
+
+// ── Export CSV ──────────────────────────────
+function exportCSV() {
+    const filtered = getFiltered();
+    if (!filtered.length) return alert('No hay datos para exportar');
+
+    const headers = ['Fecha','Hora','Servicio','Nombre','Teléfono','Matrícula','Estado','Recibido'];
+    const rows = filtered.map(b => [
+        b.date, b.time, b.serviceName || b.service,
+        b.name, b.phone, b.plate, b.status,
+        new Date(b.createdAt).toLocaleString('es-ES')
+    ].map(v => `"${v}"`).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `smartfix_reservas_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+}
+
+// ── Auto-refresh every 30s ──────────────────
+setInterval(() => {
+    if (adminToken) loadBookings();
+}, 30000);
+</script>
+</body>
+</html>

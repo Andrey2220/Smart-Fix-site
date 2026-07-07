@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Блокируем технические файлы от индексации
+Disallow: /node_modules/
+
+# Карта сайта — ЗАМЕНИ домен на реальный!
+Sitemap: https://www.smartfix-valencia.es/sitemap.xml

@@ -1,0 +1,68 @@
+/* =============================================
+   SmartFix Spain — Main Stylesheet (Light Theme)
+   ============================================= */
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #eef4ff;
+    color: #1e293b;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, .font-syne {
+    font-family: 'Syne', sans-serif;
+}
+
+/* --- Glassmorphism (Light) --- */
+.glass-panel {
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    box-shadow: 0 4px 32px rgba(14, 120, 200, 0.08);
+}
+
+.glass-panel-green {
+    background: rgba(255, 255, 255, 0.80);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    box-shadow: 0 4px 32px rgba(16, 185, 129, 0.08);
+}
+
+/* --- Ambient Glows --- */
+.ambient-glow-cyan {
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+}
+
+.ambient-glow-green {
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%);
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #eef4ff;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #bfdbfe;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0ea5e9;
+}
+
+/* --- Animations --- */
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 15px rgba(14, 165, 233, 0.15); }
+    50% { box-shadow: 0 0 30px rgba(14, 165, 233, 0.35); }
+}
+
+.pulse-glow {
+    animation: pulseGlow 3s infinite;
+}
