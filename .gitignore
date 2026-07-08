@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Secrets — NEVER commit
+.env
+
+# Database (stays on server)
+bookings.db
+
+# OS
+.DS_Store
+Thumbs.db

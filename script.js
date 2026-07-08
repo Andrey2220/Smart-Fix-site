@@ -5,6 +5,25 @@
 // --- 0. MULTILINGUAL SUPPORT ---
 let currentLang = 'es';
 
+// Live open/closed indicator
+function updateLiveStatus() {
+    const el = document.getElementById('liveStatus');
+    if (!el) return;
+    const now = new Date();
+    const day = now.getDay();   // 0=Sun,1=Mon,...,6=Sat
+    const h   = now.getHours();
+    const m   = now.getMinutes();
+    const mins = h * 60 + m;
+    const isOpen = day >= 1 && day <= 6 && mins >= 9*60+30 && mins < 19*60;
+    const labels = { es: ['Abierto ahora','Cerrado ahora'], en: ['Open now','Closed now'], ru: ['Открыто','Закрыто'] };
+    const [openTxt, closedTxt] = labels[currentLang] || labels.es;
+    el.innerHTML = isOpen
+        ? `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span><span class="text-emerald-600">${openTxt}</span>`
+        : `<span class="w-2 h-2 rounded-full bg-red-400"></span><span class="text-red-500">${closedTxt}</span>`;
+}
+updateLiveStatus();
+setInterval(updateLiveStatus, 60000);
+
 const translations = {
     es: {
         nav_services: 'Servicios', nav_budget: 'Presupuesto', nav_book: 'Reservar',
@@ -48,6 +67,9 @@ const translations = {
         sec_app_bullet1: '<strong>Notificaciones proactivas:</strong> Alertas antes de que tu aire acondicionado deje de enfriar.',
         sec_app_bullet2: '<strong>Pases Wallet instantáneos:</strong> Entra de manera directa por lectura de patente sin mediar palabra.',
         footer_copy: '© 2026 SmartFix Digital España. Todos los derechos reservados.',
+        footer_tagline: 'Recarga AC y autolavado profesional con reserva online.',
+        footer_contact_title: 'Contacto', footer_hours_title: 'Horario',
+        footer_hours_weekdays: 'Lunes – Sábado', footer_hours_sunday: 'Domingo — Cerrado',
         // Booking service card text
         book_ac_std_title: 'Clima Estándar', book_ac_std_badge: 'Gas R134a • Hasta 2013',
         book_ac_std_desc: 'Para coches fabricados hasta 2013. Incluye vaciado, detección de fugas y carga precisa de gas.',
@@ -125,6 +147,9 @@ const translations = {
         sec_app_bullet1: '<strong>Proactive notifications:</strong> Alerts before your air conditioning stops cooling.',
         sec_app_bullet2: '<strong>Instant Wallet passes:</strong> Entry via automatic plate recognition, no words needed.',
         footer_copy: '© 2026 SmartFix Digital Spain. All rights reserved.',
+        footer_tagline: 'AC recharge and professional car wash with online booking.',
+        footer_contact_title: 'Contact', footer_hours_title: 'Opening hours',
+        footer_hours_weekdays: 'Monday – Saturday', footer_hours_sunday: 'Sunday — Closed',
         // Booking service card text
         book_ac_std_title: 'Standard Climate', book_ac_std_badge: 'R134a Gas • Up to 2013',
         book_ac_std_desc: 'For cars made up to 2013. Includes evacuation, leak detection and precise gas charge.',
@@ -202,6 +227,9 @@ const translations = {
         sec_app_bullet1: '<strong>Проактивные уведомления:</strong> Оповещения до того, как кондиционер перестанет охлаждать.',
         sec_app_bullet2: '<strong>Мгновенные Wallet-пропуска:</strong> Въезд по распознаванию номера без слов.',
         footer_copy: '© 2026 SmartFix Digital Испания. Все права защищены.',
+        footer_tagline: 'Заправка кондиционера и автомойка с онлайн-записью.',
+        footer_contact_title: 'Контакты', footer_hours_title: 'Часы работы',
+        footer_hours_weekdays: 'Понедельник – Суббота', footer_hours_sunday: 'Воскресенье — Закрыто',
         // Booking service card text
         book_ac_std_title: 'Стандартный AC', book_ac_std_badge: 'Газ R134a • До 2013',
         book_ac_std_desc: 'Для автомобилей выпуска до 2013 г. Откачка, обнаружение утечек и точная заправка газом.',
@@ -451,7 +479,8 @@ function switchTab(tabKey) {
 let bookingState = {
     step: 1,
     serviceCategory: 'ac',
-    selectedService: '',
+    selectedService: '',       // ID: standard_ac / wash_ext / wash_int / wash_full
+    selectedServiceName: '',   // Display name for ticket
     selectedPrice: 0,
     selectedDate: '',
     selectedTime: '',
@@ -460,9 +489,123 @@ let bookingState = {
     clientPlate: ''
 };
 
+// ── Date helpers ─────────────────────────────
+const LANG_LOCALE = { es: 'es-ES', en: 'en-GB', ru: 'ru-RU' };
+
+function formatDateLabel(isoDate, lang) {
+    const d = new Date(isoDate + 'T12:00:00');
+    const locale = LANG_LOCALE[lang] || 'es-ES';
+    const dayName = d.toLocaleDateString(locale, { weekday: 'short' });
+    const dayNum  = d.getDate();
+    return `${dayName}\n${dayNum}`;
+}
+
+// ── Load working days from server ────────────
+function toLocalDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+async function loadWorkingDays() {
+    const container = document.getElementById('dateBtns');
+    if (!container) return;
+    try {
+        const res  = await fetch('/api/working-days');
+        const data = await res.json();
+        renderDateButtons(data.days);
+    } catch {
+        // Server not available (local file mode) — generate client-side
+        const days = [];
+        const d = new Date(); d.setHours(0,0,0,0);
+        while (days.length < 9) {
+            if (d.getDay() !== 0) days.push(toLocalDateStr(d));
+            d.setDate(d.getDate() + 1);
+        }
+        renderDateButtons(days);
+    }
+}
+
+function renderDateButtons(days) {
+    const container = document.getElementById('dateBtns');
+    if (!container) return;
+    container.className = 'grid grid-cols-3 sm:grid-cols-5 gap-1.5';
+    container.innerHTML = days.map(iso => {
+        const d = new Date(iso + 'T12:00:00');
+        const locale = LANG_LOCALE[currentLang] || 'es-ES';
+        const dayName = d.toLocaleDateString(locale, { weekday: 'short' });
+        const dayNum  = d.getDate();
+        return `<button onclick="selectBookingDate('${iso}')"
+                    class="date-btn p-2.5 bg-white border border-slate-200 rounded-xl hover:border-sky-400 text-slate-600 hover:text-slate-900 transition-colors text-xs leading-tight">
+                    <span class="block font-semibold">${dayName}</span>
+                    <span class="block text-base font-bold">${dayNum}</span>
+                </button>`;
+    }).join('');
+}
+
+// ── Generate periodic time slots (e.g. every 60 min from 09:30 to 19:00) ──
+function generateTimeRange(startStr, endStr, stepMinutes) {
+    const [startH, startM] = startStr.split(':').map(Number);
+    const [endH, endM]     = endStr.split(':').map(Number);
+    const startMins = startH * 60 + startM;
+    const endMins   = endH * 60 + endM;
+
+    const times = [];
+    for (let mins = startMins; mins <= endMins; mins += stepMinutes) {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        times.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+    }
+    return times;
+}
+
+// ── Load available slots from server ─────────
+async function loadAvailableSlots(isoDate, service) {
+    const container = document.getElementById('timeSlotsBtns');
+    if (!container) return;
+
+    container.innerHTML = `<div class="col-span-4 text-slate-400 text-sm py-2 flex items-center gap-2">
+        <i class="fa-solid fa-spinner fa-spin text-sky-400"></i> Cargando horarios…</div>`;
+
+    try {
+        const res   = await fetch(`/api/available-slots?date=${isoDate}&service=${service}`);
+        const data  = await res.json();
+        renderTimeSlots(data.slots || []);
+    } catch {
+        // Server not available — show basic fallback slots
+        const cols  = 4;
+        const times = service === 'standard_ac'
+            ? ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00']
+            : service === 'wash_full'
+            ? ['09:30','11:00','12:30','14:00','15:30']
+            : ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00',
+               '13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+        renderTimeSlots(times.map(t => ({ time: t, available: true })));
+    }
+}
+
+function renderTimeSlots(slots) {
+    const container = document.getElementById('timeSlotsBtns');
+    if (!container) return;
+
+    if (!slots.length) {
+        container.innerHTML = `<div class="col-span-4 text-slate-400 text-sm py-3">
+            No hay horarios disponibles para este día.</div>`;
+        return;
+    }
+
+    container.innerHTML = slots.map(s => {
+        if (!s.available) {
+            return `<button disabled class="time-btn p-2 bg-slate-100 border border-slate-200 rounded-xl text-slate-400 text-xs cursor-not-allowed line-through"
+                        title="Ocupado">${s.time}</button>`;
+        }
+        return `<button onclick="selectBookingTime('${s.time}')"
+                    class="time-btn p-2 bg-white border border-slate-200 rounded-xl hover:border-sky-400 text-slate-600 hover:text-slate-900 transition-colors text-xs">${s.time}</button>`;
+    }).join('');
+}
+
 function switchServiceCategory(cat) {
     bookingState.serviceCategory = cat;
     bookingState.selectedService = '';
+    bookingState.selectedServiceName = '';
 
     const acBtn = document.getElementById('catBtn-ac');
     const washBtn = document.getElementById('catBtn-wash');
@@ -487,7 +630,8 @@ function switchServiceCategory(cat) {
 }
 
 function selectBookingService(serviceId, serviceName, price) {
-    bookingState.selectedService = serviceName;
+    bookingState.selectedService     = serviceId;    // ID для API слотов
+    bookingState.selectedServiceName = serviceName;  // Название для тикета
     bookingState.selectedPrice = price;
 
     const cards = document.querySelectorAll('.booking-service-card');
@@ -499,12 +643,17 @@ function selectBookingService(serviceId, serviceName, price) {
     event.currentTarget.classList.add('border-brandCyan');
 }
 
-function selectBookingDate(dateStr) {
-    bookingState.selectedDate = dateStr;
+function selectBookingDate(isoDate) {
+    bookingState.selectedDate = isoDate;
+    bookingState.selectedTime = '';
 
-    const btns = document.querySelectorAll('.date-btn');
-    btns.forEach(btn => btn.classList.remove('bg-brandCyan', 'text-black', 'border-brandCyan'));
+    document.querySelectorAll('.date-btn').forEach(btn => {
+        btn.classList.remove('bg-brandCyan', 'text-black', 'border-brandCyan');
+    });
     event.currentTarget.classList.add('bg-brandCyan', 'text-black', 'border-brandCyan');
+
+    // Load available slots for this date
+    loadAvailableSlots(isoDate, bookingState.selectedService || bookingState.serviceCategory);
 }
 
 function selectBookingTime(timeStr) {
@@ -578,23 +727,12 @@ function nextStep() {
 
         // Switch time slots when entering step 2
         if (bookingState.step === 2) {
+            bookingState.selectedDate = '';
             bookingState.selectedTime = '';
-            document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('bg-brandCyan', 'text-black', 'border-brandCyan'));
-
-            // Hide all time slot sections
-            document.getElementById('timeSlots-ac').classList.add('hidden');
-            document.getElementById('timeSlots-wash').classList.add('hidden');
-            document.getElementById('timeSlots-wash-short').classList.add('hidden');
-
-            // Show appropriate section based on service type
-            if (bookingState.serviceCategory === 'ac') {
-                document.getElementById('timeSlots-ac').classList.remove('hidden');
-            } else if (bookingState.selectedService === 'wash_full') {
-                document.getElementById('timeSlots-wash').classList.remove('hidden');
-            } else {
-                // wash_ext or wash_int — 30-min slots
-                document.getElementById('timeSlots-wash-short').classList.remove('hidden');
-            }
+            loadWorkingDays();
+            // Clear time slots until date is selected
+            const ts = document.getElementById('timeSlotsBtns');
+            if (ts) ts.innerHTML = `<div class="col-span-4 text-slate-400 text-sm py-2">Selecciona primero una fecha</div>`;
         }
 
         if (bookingState.step === 3) {
@@ -604,11 +742,18 @@ function nextStep() {
         document.getElementById('prevBtn').disabled = false;
 
         if (bookingState.step === 4) {
-            document.getElementById('ticketService').innerText = bookingState.selectedService;
-            document.getElementById('ticketName').innerText = bookingState.clientName;
-            document.getElementById('ticketDate').innerText = `${bookingState.selectedDate} de Julio`;
-            document.getElementById('ticketTime').innerText = `${bookingState.selectedTime} h`;
-            document.getElementById('ticketPlate').innerText = bookingState.clientPlate.toUpperCase();
+            // Format ISO date for display
+            const dateObj     = new Date(bookingState.selectedDate + 'T12:00:00');
+            const locale      = LANG_LOCALE[currentLang] || 'es-ES';
+            const dateDisplay = isNaN(dateObj)
+                ? bookingState.selectedDate
+                : dateObj.toLocaleDateString(locale, { weekday:'long', day:'numeric', month:'long' });
+
+            document.getElementById('ticketService').innerText = bookingState.selectedServiceName || bookingState.selectedService;
+            document.getElementById('ticketName').innerText    = bookingState.clientName;
+            document.getElementById('ticketDate').innerText    = dateDisplay;
+            document.getElementById('ticketTime').innerText    = `${bookingState.selectedTime} h`;
+            document.getElementById('ticketPlate').innerText   = bookingState.clientPlate.toUpperCase();
 
             // ── Send booking to server ──────────────────
             const serviceNames = {
@@ -622,7 +767,7 @@ function nextStep() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     service:         bookingState.selectedService,
-                    serviceName:     serviceNames[bookingState.selectedService] || bookingState.selectedService,
+                    serviceName:     bookingState.selectedServiceName || bookingState.selectedService,
                     serviceCategory: bookingState.serviceCategory,
                     date:            bookingState.selectedDate,
                     time:            bookingState.selectedTime,

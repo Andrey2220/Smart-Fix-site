@@ -223,15 +223,16 @@ function renderTable() {
         const count    = bookings.length;
         const pending  = bookings.filter(b => b.status === 'pending').length;
 
-        const isToday = date === todayStr;
+        const todayFlag = isToday(date);
+        const heading   = formatDateHeading(date);
 
         html += `
         <div class="mb-8">
             <!-- Date heading -->
             <div class="flex items-center gap-3 mb-3">
-                <div class="flex items-center gap-2 ${isToday ? 'bg-cyan-400 text-black' : 'bg-slate-200 text-slate-600'} px-4 py-1.5 rounded-full font-bold text-sm">
-                    ${isToday ? '<i class="fa-solid fa-star text-xs"></i>' : '<i class="fa-regular fa-calendar text-xs"></i>'}
-                    ${date}${isToday ? ' — HOY' : ''}
+                <div class="flex items-center gap-2 ${todayFlag ? 'bg-cyan-400 text-black' : 'bg-slate-200 text-slate-600'} px-4 py-1.5 rounded-full font-bold text-sm">
+                    ${todayFlag ? '<i class="fa-solid fa-star text-xs"></i>' : '<i class="fa-regular fa-calendar text-xs"></i>'}
+                    ${heading}${todayFlag ? ' — HOY' : ''}
                 </div>
                 <span class="text-slate-500 text-sm">${count} reserva${count !== 1 ? 's' : ''}${pending > 0 ? ` — <span class="text-amber-600 font-semibold">${pending} pendiente${pending > 1 ? 's' : ''}</span>` : ''}</span>
             </div>
@@ -303,13 +304,20 @@ function renderRow(b) {
 }
 
 function getTodayLabel() {
-    // Returns "Lunes 7" etc. — matches our booking date format
-    // Since dates in bookings are stored as user-selected strings like "Viernes 10"
-    // we just compare with today's day number for highlighting
-    const today = new Date();
-    const dayNum = today.getDate();
-    const days = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
-    return `${days[today.getDay()]} ${dayNum}`;
+    return new Date().toISOString().slice(0, 10);
+}
+
+function formatDateHeading(dateStr) {
+    // Handle both ISO (2026-07-10) and legacy string (Viernes 10)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const d = new Date(dateStr + 'T12:00:00');
+        return d.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    }
+    return dateStr; // legacy
+}
+
+function isToday(dateStr) {
+    return dateStr === getTodayLabel();
 }
 
 // ── Export CSV ──────────────────────────────
