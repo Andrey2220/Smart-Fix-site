@@ -66,3 +66,304 @@ h1, h2, h3, .font-syne {
 .pulse-glow {
     animation: pulseGlow 3s infinite;
 }
+
+/* --- Mobile-First Responsive Enhancements --- */
+
+/* Small phones (< 375px) */
+@media (max-width: 374px) {
+    html {
+        font-size: 14px;
+    }
+
+    .glass-panel {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+}
+
+/* Mobile < 640px (overrides Tailwind sm:) */
+@media (max-width: 639px) {
+    /* ===== HEADER ===== */
+    .site-header {
+        top: 0.5rem !important;
+        height: 3.5rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        width: 96% !important;
+        border-radius: 1rem !important;
+    }
+
+    .site-header .header-logo-icon {
+        width: 2rem !important;
+        height: 2rem !important;
+    }
+    .site-header .header-logo-icon i {
+        font-size: 0.875rem !important;
+    }
+    .site-header .header-logo-text {
+        font-size: 1.1rem !important;
+    }
+
+    .site-header .header-lang-switcher {
+        font-size: 0.625rem !important;
+        padding: 0.25rem 0.375rem !important;
+    }
+    .site-header .header-lang-switcher span {
+        font-size: 0.625rem !important;
+        padding: 0.125rem 0.375rem !important;
+    }
+
+    .site-header .header-hamburger {
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+    }
+
+    /* ===== MOBILE MENU ===== */
+    .mobile-menu-panel {
+        width: 85% !important;
+        max-width: 20rem !important;
+    }
+    .mobile-menu-panel a {
+        padding-top: 0.75rem !important;
+        padding-bottom: 0.75rem !important;
+        font-size: 0.95rem !important;
+    }
+
+    /* ===== HERO SECTION ===== */
+    .hero-section {
+        min-height: 90vh !important;
+    }
+    .hero-section .hero-content {
+        padding-top: 6rem !important;
+        padding-bottom: 3rem !important;
+    }
+    .hero-section h1 {
+        font-size: 2.25rem !important;
+        line-height: 1.1 !important;
+    }
+    .hero-section .hero-desc {
+        font-size: 0.95rem !important;
+    }
+
+    .hero-section .hero-buttons {
+        flex-direction: column !important;
+    }
+    .hero-section .hero-buttons a {
+        width: 100% !important;
+        text-align: center !important;
+        padding-top: 0.875rem !important;
+        padding-bottom: 0.875rem !important;
+    }
+
+    /* ===== SERVICES HIGHLIGHT CARDS ===== */
+    .services-highlight .highlight-card {
+        padding: 1.25rem !important;
+    }
+    .services-highlight .highlight-card .price {
+        font-size: 1.5rem !important;
+    }
+    .services-highlight .highlight-card .icon-wrap {
+        width: 2.75rem !important;
+        height: 2.75rem !important;
+    }
+    .services-highlight .highlight-card .icon-wrap i {
+        font-size: 1.1rem !important;
+    }
+    .services-highlight .grid-gap {
+        gap: 1rem !important;
+    }
+
+    /* ===== TABS / SERVICES SECTION ===== */
+    .services-section .section-title {
+        font-size: 1.75rem !important;
+    }
+    .services-section .section-subtitle {
+        margin-bottom: 2rem !important;
+    }
+    .services-section .tab-content-grid {
+        gap: 1.5rem !important;
+    }
+    .services-section .tab-text-wrap {
+        min-height: auto !important;
+    }
+    .services-section .tab-media-wrap {
+        min-height: 250px !important;
+    }
+    .services-section .tab-buttons-wrap button {
+        font-size: 0.8rem !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    /* ===== BOOKING SECTION ===== */
+    .booking-section .section-title {
+        font-size: 1.75rem !important;
+    }
+    .booking-section .booking-inner {
+        padding: 1rem !important;
+    }
+    .booking-section .booking-min-height {
+        min-height: auto !important;
+    }
+
+    .booking-section .service-cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+
+    .booking-section .booking-date-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+    .booking-section .booking-date-grid .date-btn {
+        padding: 0.625rem 0.375rem !important;
+    }
+    .booking-section .booking-date-grid .date-btn .date-num {
+        font-size: 1rem !important;
+    }
+
+    .booking-section .booking-time-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.375rem !important;
+    }
+    .booking-section .booking-time-grid .time-btn {
+        padding: 0.5rem 0.25rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .booking-section .booking-nav {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        padding: 0.75rem 1rem !important;
+    }
+    .booking-section .booking-nav button {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .booking-section .booking-inputs-grid {
+        gap: 0.75rem !important;
+    }
+    .booking-section .booking-inputs-grid input {
+        padding: 0.75rem !important;
+        font-size: 0.9rem !important;
+    }
+
+    .booking-section .ticket-card {
+        max-width: 100% !important;
+    }
+    .booking-section .ticket-title {
+        font-size: 1.25rem !important;
+    }
+
+    .booking-section .step-indicator .step-dot {
+        width: 1.5rem !important;
+    }
+
+    /* ===== APP SECTION ===== */
+    .app-section {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    .app-section .section-title {
+        font-size: 1.75rem !important;
+    }
+    .app-section .phone-mockup {
+        width: 14rem !important;
+    }
+    .app-section .phone-mockup-wrap {
+        height: 30rem !important;
+    }
+
+    /* ===== FOOTER ===== */
+    .site-footer .footer-grid {
+        gap: 1.5rem !important;
+    }
+    .site-footer .footer-bottom {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: 1rem !important;
+    }
+
+    /* ===== AMBIENT GLOWS ===== */
+    .ambient-glow-cyan,
+    .ambient-glow-green {
+        display: none !important;
+    }
+
+    /* ===== GENERAL ===== */
+    .generic-section {
+        padding-top: 2.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+
+    .generic-section-title {
+        font-size: 1.75rem !important;
+        line-height: 1.2 !important;
+    }
+
+    .generic-text-lg {
+        font-size: 0.95rem !important;
+    }
+
+    .generic-section-mb {
+        margin-bottom: 2rem !important;
+    }
+}
+
+/* Tablet (640px - 768px) */
+@media (min-width: 640px) and (max-width: 767px) {
+    .site-header {
+        height: 4rem !important;
+        padding-left: 1.25rem !important;
+        padding-right: 1.25rem !important;
+    }
+
+    .hero-section h1 {
+        font-size: 2.75rem !important;
+    }
+
+    .booking-section .wash-cards-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    .booking-section .booking-time-grid {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+}
+
+/* Fix for iPhone notch / dynamic island */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .site-header {
+        margin-top: env(safe-area-inset-top);
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .date-btn, .time-btn, .booking-service-card,
+    button, a, .tab-btn {
+        min-height: 44px;
+    }
+
+    .date-btn:hover, .time-btn:hover {
+        border-color: inherit !important;
+    }
+    .date-btn:active, .time-btn:active {
+        transform: scale(0.95);
+    }
+
+    html {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero-section {
+        min-height: 120vh !important;
+    }
+    .hero-section .hero-content {
+        padding-top: 5rem !important;
+        padding-bottom: 2rem !important;
+    }
+}

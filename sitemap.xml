@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- ЗАМЕНИ домен https://www.smartfix-valencia.es на реальный перед публикацией! -->
+<!-- ЗАМЕНИ домен https://smartfixs.es на реальный перед публикацией! -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
     <url>
-        <loc>https://www.smartfix-valencia.es/</loc>
+        <loc>https://smartfixs.es/</loc>
         <lastmod>2026-07-07</lastmod>
         <changefreq>weekly</changefreq>
         <priority>1.0</priority>
         <!-- Versiones de idioma -->
-        <xhtml:link rel="alternate" hreflang="es" href="https://www.smartfix-valencia.es/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://www.smartfix-valencia.es/?lang=en"/>
-        <xhtml:link rel="alternate" hreflang="ru" href="https://www.smartfix-valencia.es/?lang=ru"/>
-        <xhtml:link rel="alternate" hreflang="x-default" href="https://www.smartfix-valencia.es/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://smartfixs.es/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://smartfixs.es/?lang=en"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://smartfixs.es/?lang=ru"/>
+        <xhtml:link rel="alternate" hreflang="x-default" href="https://smartfixs.es/"/>
     </url>
 </urlset>

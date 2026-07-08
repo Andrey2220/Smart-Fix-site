@@ -5,4 +5,4 @@ Allow: /
 Disallow: /node_modules/
 
 # Карта сайта — ЗАМЕНИ домен на реальный!
-Sitemap: https://www.smartfix-valencia.es/sitemap.xml
+Sitemap: https://smartfixs.es/sitemap.xml

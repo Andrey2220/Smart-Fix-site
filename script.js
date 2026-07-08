@@ -54,7 +54,7 @@ const translations = {
         book_phone_label: 'Número de Teléfono', book_phone_ph: 'Ej: +34 600 000 000',
         book_plate_label: 'Matrícula del Vehículo', book_plate_ph: 'Ej: 1234 ABC',
         book_success_title: '¡Cita confirmada con éxito!',
-        book_success_desc: 'Te hemos enviado el pase electrónico en formato Wallet a tu teléfono.',
+        book_success_desc: 'Te esperamos en el centro. Aquí tienes el resumen de tu reserva.',
         ticket_client: 'Cliente:', ticket_date: 'Fecha:',
         ticket_time: 'Hora de Cita:', ticket_plate: 'Matrícula:',
         book_prev: 'Atrás', book_next: 'Siguiente', book_confirm: 'Confirmar Cita',
@@ -134,7 +134,7 @@ const translations = {
         book_phone_label: 'Phone Number', book_phone_ph: 'e.g. +34 600 000 000',
         book_plate_label: 'Vehicle Plate Number', book_plate_ph: 'e.g. 1234 ABC',
         book_success_title: 'Appointment confirmed!',
-        book_success_desc: 'We have sent your digital pass in Wallet format to your phone.',
+        book_success_desc: 'See you at the center. Here is your booking summary.',
         ticket_client: 'Client:', ticket_date: 'Date:',
         ticket_time: 'Appointment Time:', ticket_plate: 'Plate:',
         book_prev: 'Back', book_next: 'Next', book_confirm: 'Confirm Appointment',
@@ -214,7 +214,7 @@ const translations = {
         book_phone_label: 'Номер телефона', book_phone_ph: 'Напр: +34 600 000 000',
         book_plate_label: 'Номерной знак автомобиля', book_plate_ph: 'Напр: 1234 ABC',
         book_success_title: 'Запись подтверждена!',
-        book_success_desc: 'Мы отправили ваш электронный пропуск в формате Wallet на ваш телефон.',
+        book_success_desc: 'Ждём вас в сервисном центре. Детали вашей записи:',
         ticket_client: 'Клиент:', ticket_date: 'Дата:',
         ticket_time: 'Время записи:', ticket_plate: 'Номер авто:',
         book_prev: 'Назад', book_next: 'Далее', book_confirm: 'Подтвердить запись',
@@ -527,7 +527,7 @@ async function loadWorkingDays() {
 function renderDateButtons(days) {
     const container = document.getElementById('dateBtns');
     if (!container) return;
-    container.className = 'grid grid-cols-3 sm:grid-cols-5 gap-1.5';
+    container.className = 'booking-date-grid grid grid-cols-3 sm:grid-cols-5 gap-1.5';
     container.innerHTML = days.map(iso => {
         const d = new Date(iso + 'T12:00:00');
         const locale = LANG_LOCALE[currentLang] || 'es-ES';
@@ -536,7 +536,7 @@ function renderDateButtons(days) {
         return `<button onclick="selectBookingDate('${iso}')"
                     class="date-btn p-2.5 bg-white border border-slate-200 rounded-xl hover:border-sky-400 text-slate-600 hover:text-slate-900 transition-colors text-xs leading-tight">
                     <span class="block font-semibold">${dayName}</span>
-                    <span class="block text-base font-bold">${dayNum}</span>
+                    <span class="date-num block text-base font-bold">${dayNum}</span>
                 </button>`;
     }).join('');
 }
@@ -591,6 +591,8 @@ function renderTimeSlots(slots) {
             No hay horarios disponibles para este día.</div>`;
         return;
     }
+
+    container.className = 'booking-time-grid grid grid-cols-4 gap-1.5 max-h-52 overflow-y-auto pr-1';
 
     container.innerHTML = slots.map(s => {
         if (!s.available) {
