@@ -777,9 +777,26 @@ function nextStep() {
                     phone:           bookingState.clientPhone,
                     plate:           bookingState.clientPlate
                 })
-            }).catch(err => console.warn('[Booking] Server not available:', err.message));
-
-            document.getElementById('bookingNav').classList.add('hidden');
+            })
+            .then(res => {
+                if (!res.ok) {
+                    return res.json().then(err => { throw new Error(err.error || 'Error del servidor'); });
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log('[Booking] ✅ Reserva creada ID:', data.id);
+                document.getElementById('bookingNav').classList.add('hidden');
+            })
+            .catch(err => {
+                console.warn('[Booking] ❌ Error:', err.message);
+                alert('Error al crear la reserva: ' + err.message);
+                // Возвращаемся на шаг назад
+                bookingState.step = 3;
+                document.getElementById('step-4').classList.add('hidden');
+                document.getElementById('step-3').classList.remove('hidden');
+                document.getElementById('bookingNav').classList.remove('hidden');
+            });
         }
     }
 }

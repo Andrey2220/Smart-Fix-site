@@ -10,7 +10,8 @@ const Database   = require('better-sqlite3');
 const helmet     = require('helmet');
 const rateLimit  = require('express-rate-limit');
 const path       = require('path');
-require('dotenv').config();
+// Загружаем .env из папки сервера (чтобы работало при запуске из любой директории)
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -113,26 +114,36 @@ function validateBooking(body) {
 
 // ── Telegram ─────────────────────────────────
 async function sendTelegram(b) {
-    if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+    if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+        console.log('[Telegram] ⚠️ Пропущено: TELEGRAM_TOKEN или TELEGRAM_CHAT_ID не настроены');
+        return;
+    }
     const icon = b.service_category === 'wash' ? '🧼' : '❄️';
     const dateObj = new Date(b.date + 'T12:00:00');
     const dateDisplay = dateObj.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' });
     const text =
         `${icon} *Nueva reserva — SmartFix Valencia*\n\n` +
-        `📋 *Servicio:* ${b.service_name}\n` +
+        `📋 *Servicio:* ${b.service_name || b.service}\n` +
         `📅 *Fecha:* ${dateDisplay}\n` +
         `⏰ *Hora:* ${b.time}\n` +
         `👤 *Cliente:* ${b.name}\n` +
         `📞 *Teléfono:* ${b.phone}\n` +
         `🚗 *Matrícula:* ${b.plate}`;
     try {
-        await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: 'Markdown' })
         });
-        console.log('[Telegram] Notification sent');
-    } catch (e) { console.error('[Telegram] Error:', e.message); }
+        const result = await response.json();
+        if (response.ok) {
+            console.log('[Telegram] ✅ Уведомление отправлено');
+        } else {
+            console.error('[Telegram] ❌ Ошибка API Telegram:', JSON.stringify(result));
+        }
+    } catch (e) { 
+        console.error('[Telegram] ❌ Ошибка сети/запроса:', e.message); 
+    }
 }
 
 // ── Auth middleware ──────────────────────────
@@ -271,6 +282,31 @@ app.delete('/api/booking/:id', requireAdmin, (req, res) => {
     const r = db.prepare('DELETE FROM bookings WHERE id = ?').run(req.params.id);
     if (r.changes === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
+});
+
+// ── API: Тест Telegram (диагностика) ─────────
+app.post('/api/test-telegram', (req, res) => {
+    if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+        return res.status(400).json({ 
+            error: 'Telegram не настроен',
+            tokenSet: !!TELEGRAM_TOKEN,
+            chatIdSet: !!TELEGRAM_CHAT_ID
+        });
+    }
+    const testBooking = {
+        service_name: '🔧 Тестовое сообщение',
+        service_category: 'ac',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        name: 'SmartFix Диагностика',
+        phone: '+34 614 434 722',
+        plate: 'TEST'
+    };
+    sendTelegram(testBooking).then(() => {
+        res.json({ success: true, message: 'Тестовое сообщение отправлено. Проверьте Telegram.' });
+    }).catch(e => {
+        res.status(500).json({ error: 'Ошибка отправки: ' + e.message });
+    });
 });
 
 // ── 404 API ──────────────────────────────────
