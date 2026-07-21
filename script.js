@@ -261,6 +261,14 @@ const translations = {
         book_wash_full_title: 'Полная', book_wash_full_time: '~1.5 часа',
         book_wash_full_desc: 'Снаружи + внутри. Самый полный вариант, чтобы авто выглядело как новое.',
         book_wash_popular: 'ПОПУЛЯРНО',
+        // Oil change cards
+        book_oil_labor_title: 'Только работа', book_oil_labor_badge: 'Ваши материалы',
+        book_oil_labor_desc: 'Замена масла и фильтра с использованием ваших материалов.',
+        book_oil_labor_note: 'Убедитесь в правильности спецификаций вашего масла.',
+        book_oil_full_title: 'Полный сервис', book_oil_full_badge: 'Всё включено',
+        book_oil_full_desc: 'Замена масла + масло высокого качества и фильтр включены.',
+        book_vin_label: 'VIN / Номер кузова', book_vin_ph: 'Напр: WAUZZZ8VX7A123456',
+        book_vin_note: 'Необходим для заказа правильных фильтров и масла для вашего авто.',
         // Date buttons
         date_fri10: 'Пятница 10', date_sat11: 'Суббота 11', date_mon13: 'Понед. 13',
         date_tue14: 'Вторник 14', date_wed15: 'Среда 15',
