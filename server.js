@@ -17,7 +17,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Конфигурация (env переменные на VPS) ────
-const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD   || '1444';
+const ADMIN_PASSWORD   = process.env.ADMIN_PASSWORD   || '1111';
 const TELEGRAM_TOKEN   = process.env.TELEGRAM_TOKEN   || '';
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '';
 const DB_PATH          = path.join(__dirname, 'bookings.db');
