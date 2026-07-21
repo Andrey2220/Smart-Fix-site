@@ -464,6 +464,9 @@
                                 <button onclick="switchServiceCategory('wash')" id="catBtn-wash" class="px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 bg-white border border-slate-200 text-slate-600 hover:border-sky-300 transition-all duration-200">
                                     <i class="fa-solid fa-soap"></i> <span data-i18n="book_cat_wash">Autolavado</span>
                                 </button>
+                                <button onclick="switchServiceCategory('oil')" id="catBtn-oil" class="px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 bg-white border border-slate-200 text-slate-600 hover:border-sky-300 transition-all duration-200">
+                                    <i class="fa-solid fa-oil-can"></i> <span data-i18n="book_cat_oil">Cambio de aceite</span>
+                                </button>
                             </div>
                         </div>
 
@@ -489,6 +492,39 @@
                                         <span class="text-xs font-bold text-slate-400 bg-slate-200 px-2 py-1 rounded-lg" data-i18n="book_ac_eco_na">No disponible</span>
                                     </div>
                                     <p class="text-xs text-slate-400" data-i18n="book_ac_eco_desc">Los vehículos con gas R1234yf requieren equipamiento especializado.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Oil Change Cards -->
+                        <div id="cards-oil" class="hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div onclick="selectBookingService('oil_labor', 'Cambio Aceite (Solo Mano de Obra)', 25)" class="booking-service-card p-5 rounded-2xl border-2 border-sky-100 hover:border-brandCyan bg-white cursor-pointer transition-all hover:scale-[1.01]">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h5 class="font-bold text-slate-900" data-i18n="book_oil_labor_title">Solo Mano de Obra</h5>
+                                            <span class="text-xs font-semibold text-sky-600 bg-sky-50 px-2 py-0.5 rounded-full" data-i18n="book_oil_labor_badge">Tus materiales</span>
+                                        </div>
+                                        <span class="text-sky-600 font-extrabold text-xl">€25</span>
+                                    </div>
+                                    <p class="text-xs text-slate-500" data-i18n="book_oil_labor_desc">Cambio de aceite y filtro utilizando tus propios materiales.</p>
+                                    <p class="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+                                        <i class="fa-solid fa-circle-info"></i> <span data-i18n="book_oil_labor_note">Verifica las especificaciones de tu aceite.</span>
+                                    </p>
+                                </div>
+                                <div onclick="selectBookingService('oil_full', 'Cambio Aceite (Servicio Completo)', 79)" class="booking-service-card p-5 rounded-2xl border-2 border-emerald-100 hover:border-emerald-400 bg-white cursor-pointer transition-all hover:scale-[1.01] relative">
+                                    <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[10px] font-bold px-3 py-0.5 rounded-full whitespace-nowrap" data-i18n="book_wash_popular">RECOMENDADO</div>
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h5 class="font-bold text-slate-900" data-i18n="book_oil_full_title">Servicio Completo</h5>
+                                            <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full" data-i18n="book_oil_full_badge">Todo incluido</span>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-[10px] text-slate-400 block leading-none" data-i18n="sh_from">Desde</span>
+                                            <span class="text-emerald-600 font-extrabold text-xl">€79</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-500" data-i18n="book_oil_full_desc">Cambio de aceite + aceite de alta calidad y filtro incluidos.</p>
                                 </div>
                             </div>
                         </div>
@@ -574,6 +610,14 @@
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-semibold uppercase text-slate-500 mb-2" data-i18n="book_plate_label">Matrícula del Vehículo</label>
                                 <input id="clientPlate" type="text" placeholder="Ej: 1234 ABC" class="w-full bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:border-sky-400 uppercase" data-i18n-placeholder="book_plate_ph">
+                            </div>
+                            <!-- VIN field (visible only for oil_full service) -->
+                            <div id="vinFieldWrap" class="md:col-span-2 hidden">
+                                <label class="block text-xs font-semibold uppercase text-slate-500 mb-2" data-i18n="book_vin_label">VIN / Número de Bastidor</label>
+                                <input id="clientVin" type="text" placeholder="Ej: WAUZZZ8VX7A123456" class="w-full bg-white border border-slate-200 text-slate-700 rounded-xl px-4 py-3.5 focus:outline-none focus:border-sky-400 uppercase" data-i18n-placeholder="book_vin_ph">
+                                <p class="text-[10px] text-amber-500 mt-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-circle-info"></i> <span data-i18n="book_vin_note">Necesario para pedir los filtros y aceite correctos para tu vehículo.</span>
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -53,7 +53,10 @@ const SLOTS = {
     wash_int: ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00',
                '13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'],
     // Completo пн-пт: каждые 1.5ч, последний старт 15:30 (done 17:00)
-    wash_full: ['09:30','11:00','12:30','14:00','15:30']
+    wash_full: ['09:30','11:00','12:30','14:00','15:30'],
+    // Aceite пн-пт: каждые 1.5ч, с 09:30 до 17:00
+    oil_labor: ['09:30','11:00','12:30','14:00','15:30','17:00'],
+    oil_full:  ['09:30','11:00','12:30','14:00','15:30','17:00']
 };
 // Суббота — сокращённый день: последняя машина в 13:00
 const SLOTS_SAT = {
@@ -61,7 +64,9 @@ const SLOTS_SAT = {
     standard_ac: ['10:00','11:00','12:00','13:00'],
     wash_ext: ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00'],
     wash_int: ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00'],
-    wash_full: ['09:30','11:00']   // done 12:30
+    wash_full: ['09:30','11:00'],   // done 12:30
+    oil_labor: ['09:30','11:00','12:30'],  // done 14:00
+    oil_full:  ['09:30','11:00','12:30']   // done 14:00
 };
 
 // ── Безопасность ─────────────────────────────
@@ -101,7 +106,7 @@ function validateBooking(body) {
     if (name.trim().length < 2 || name.length > 100) return 'Nombre inválido';
     if (!/^\+?[\d\s\-().]{6,20}$/.test(phone))  return 'Teléfono inválido';
     if (!/^[A-Z0-9\s\-]{3,10}$/i.test(plate))   return 'Matrícula inválida';
-    if (!['ac','wash'].includes(serviceCategory)) return 'Categoría inválida';
+    if (!['ac','wash','oil'].includes(serviceCategory)) return 'Categoría inválida';
 
     // No pasado
     const d = new Date(date + 'T12:00:00');
@@ -118,7 +123,7 @@ async function sendTelegram(b) {
         console.log('[Telegram] ⚠️ Пропущено: TELEGRAM_TOKEN или TELEGRAM_CHAT_ID не настроены');
         return;
     }
-    const icon = b.service_category === 'wash' ? '🧼' : '❄️';
+    const icon = b.service_category === 'wash' ? '🧼' : b.service_category === 'oil' ? '🛢️' : '❄️';
     const dateObj = new Date(b.date + 'T12:00:00');
     const dateDisplay = dateObj.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' });
     const text =

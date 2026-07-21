@@ -46,6 +46,7 @@ const translations = {
         sec_book_title: 'Módulo de Reserva Inteligente',
         sec_book_desc: 'Una interfaz pensada para el móvil. Reserva en menos de un minuto.',
         book_header: 'Cita express online', book_step1_title: '¿Qué servicio necesitas?',
+        book_cat_oil: 'Cambio de aceite',
         book_cat_ac: 'Climatización AC', book_cat_wash: 'Smart Wash',
         book_step2_title: 'Selecciona Fecha y Hora',
         book_dates_label: 'Día disponible (Julio 2026)', book_times_label: 'Horas disponibles',
@@ -82,6 +83,14 @@ const translations = {
         book_wash_full_title: 'Completo', book_wash_full_time: '~1.5 horas',
         book_wash_full_desc: 'Exterior + interior. La opción más completa para dejar tu coche como nuevo.',
         book_wash_popular: 'MÁS POPULAR',
+        // Oil change cards
+        book_oil_labor_title: 'Solo Mano de Obra', book_oil_labor_badge: 'Tus materiales',
+        book_oil_labor_desc: 'Cambio de aceite y filtro utilizando tus propios materiales.',
+        book_oil_labor_note: 'Verifica las especificaciones de tu aceite.',
+        book_oil_full_title: 'Servicio Completo', book_oil_full_badge: 'Todo incluido',
+        book_oil_full_desc: 'Cambio de aceite + aceite de alta calidad y filtro incluidos.',
+        book_vin_label: 'VIN / Número de Bastidor', book_vin_ph: 'Ej: WAUZZZ8VX7A123456',
+        book_vin_note: 'Necesario para pedir los filtros y aceite correctos para tu vehículo.',
         // Date buttons
         date_fri10: 'Viernes 10', date_sat11: 'Sábado 11', date_mon13: 'Lunes 13',
         date_tue14: 'Martes 14', date_wed15: 'Miérc. 15',
@@ -126,6 +135,7 @@ const translations = {
         sec_book_title: 'Smart Booking Module',
         sec_book_desc: 'A mobile-first interface. Book in less than a minute.',
         book_header: 'Express Online Appointment', book_step1_title: 'What service do you need?',
+        book_cat_oil: 'Oil Change',
         book_cat_ac: 'AC Service', book_cat_wash: 'Smart Wash',
         book_step2_title: 'Select Date & Time',
         book_dates_label: 'Available days (July 2026)', book_times_label: 'Available times',
@@ -162,6 +172,14 @@ const translations = {
         book_wash_full_title: 'Full', book_wash_full_time: '~1.5 hours',
         book_wash_full_desc: 'Exterior + interior. The most complete option to make your car look brand new.',
         book_wash_popular: 'MOST POPULAR',
+        // Oil change cards
+        book_oil_labor_title: 'Labour Only', book_oil_labor_badge: 'Your materials',
+        book_oil_labor_desc: 'Oil and filter change using your own materials.',
+        book_oil_labor_note: 'Verify your oil specifications.',
+        book_oil_full_title: 'Full Service', book_oil_full_badge: 'All included',
+        book_oil_full_desc: 'Oil change + high quality oil and filter included.',
+        book_vin_label: 'VIN / Chassis Number', book_vin_ph: 'e.g. WAUZZZ8VX7A123456',
+        book_vin_note: 'Required to order the correct filters and oil for your vehicle.',
         // Date buttons
         date_fri10: 'Friday 10', date_sat11: 'Saturday 11', date_mon13: 'Monday 13',
         date_tue14: 'Tuesday 14', date_wed15: 'Wed. 15',
@@ -206,6 +224,7 @@ const translations = {
         sec_book_title: 'Умная онлайн-запись',
         sec_book_desc: 'Интерфейс для смартфона. Запись за менее чем минуту.',
         book_header: 'Онлайн-запись экспресс', book_step1_title: 'Какая услуга вам нужна?',
+        book_cat_oil: 'Замена масла',
         book_cat_ac: 'Кондиционер AC', book_cat_wash: 'Автомойка',
         book_step2_title: 'Выберите дату и время',
         book_dates_label: 'Доступные дни (июль 2026)', book_times_label: 'Доступное время',
@@ -572,10 +591,11 @@ async function loadAvailableSlots(isoDate, service) {
     } catch {
         // Server not available — show basic fallback slots
         const cols  = 4;
+        const oilSlots = ['09:30','11:00','12:30','14:00','15:30','17:00'];
         const times = service === 'standard_ac'
             ? ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00']
-            : service === 'wash_full'
-            ? ['09:30','11:00','12:30','14:00','15:30']
+            : service === 'wash_full' || service === 'oil_labor' || service === 'oil_full'
+            ? oilSlots
             : ['09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00',
                '13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
         renderTimeSlots(times.map(t => ({ time: t, available: true })));
@@ -611,19 +631,25 @@ function switchServiceCategory(cat) {
 
     const acBtn = document.getElementById('catBtn-ac');
     const washBtn = document.getElementById('catBtn-wash');
+    const oilBtn = document.getElementById('catBtn-oil');
     const activeClass = 'px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 bg-brandCyan text-black shadow-cyanGlow transition-all duration-200';
     const inactiveClass = 'px-5 py-2.5 rounded-xl font-semibold text-sm flex items-center gap-2 bg-white border border-slate-200 text-slate-600 hover:border-sky-300 transition-all duration-200';
 
+    // Reset all
+    [acBtn, washBtn, oilBtn].forEach(btn => { btn.className = inactiveClass; });
+    ['cards-ac', 'cards-wash', 'cards-oil'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+    });
+
     if (cat === 'ac') {
         acBtn.className = activeClass;
-        washBtn.className = inactiveClass;
         document.getElementById('cards-ac').classList.remove('hidden');
-        document.getElementById('cards-wash').classList.add('hidden');
+    } else if (cat === 'oil') {
+        oilBtn.className = activeClass;
+        document.getElementById('cards-oil').classList.remove('hidden');
     } else {
         washBtn.className = activeClass;
-        acBtn.className = inactiveClass;
         document.getElementById('cards-wash').classList.remove('hidden');
-        document.getElementById('cards-ac').classList.add('hidden');
     }
 
     document.querySelectorAll('.booking-service-card').forEach(card => {
@@ -643,6 +669,16 @@ function selectBookingService(serviceId, serviceName, price) {
     });
     event.currentTarget.classList.remove('border-slate-800');
     event.currentTarget.classList.add('border-brandCyan');
+
+    // Show VIN field only for oil_full service
+    const vinWrap = document.getElementById('vinFieldWrap');
+    if (vinWrap) {
+        if (serviceId === 'oil_full') {
+            vinWrap.classList.remove('hidden');
+        } else {
+            vinWrap.classList.add('hidden');
+        }
+    }
 }
 
 function selectBookingDate(isoDate) {
@@ -762,7 +798,9 @@ function nextStep() {
                 standard_ac: 'Recarga AC R134a',
                 wash_ext:    'Autolavado Exterior',
                 wash_int:    'Limpieza Interior',
-                wash_full:   'Lavado Completo (Ext. + Int.)'
+                wash_full:   'Lavado Completo (Ext. + Int.)',
+                oil_labor:   'Cambio Aceite (Solo Mano de Obra)',
+                oil_full:    'Cambio Aceite (Servicio Completo)'
             };
             fetch('/api/booking', {
                 method: 'POST',
