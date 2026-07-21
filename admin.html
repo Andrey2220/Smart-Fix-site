@@ -129,6 +129,8 @@ function logout() {
 
 // ── Data ────────────────────────────────────
 async function loadBookings() {
+    // Показываем загрузку только если мы уже в админке (не при первом входе)
+    const container = document.getElementById('bookingsContainer');
     try {
         const res = await fetch('/api/bookings', {
             headers: { 'x-admin-token': adminToken }
@@ -140,14 +142,30 @@ async function loadBookings() {
         document.getElementById('loginError').classList.add('hidden');
         allBookings = await res.json();
 
+        // Если данных нет — не переключаем экран, показываем ошибку
+        if (!Array.isArray(allBookings)) {
+            throw new Error('Ответ сервера не содержит список броней');
+        }
+
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('adminPanel').classList.remove('hidden');
         document.getElementById('statsBar').classList.remove('hidden');
 
         updateStats();
+        // Сразу убираем спиннер, даже если renderTable() упадёт
+        container.innerHTML = '';
         renderTable();
     } catch (e) {
-        alert('Error al conectar con el servidor. ¿Está el servidor encendido?');
+        console.error('[Admin] Error:', e);
+        container.innerHTML = `
+            <div class="text-center py-20">
+                <i class="fa-solid fa-circle-exclamation text-red-400 text-4xl mb-3 block"></i>
+                <p class="text-lg font-semibold text-red-500">Error de conexión</p>
+                <p class="text-sm text-slate-400 mt-1">${e.message}</p>
+                <button onclick="loadBookings()" class="mt-4 px-5 py-2 bg-cyan-400 text-black font-bold rounded-xl">
+                    Reintentar
+                </button>
+            </div>`;
     }
 }
 
