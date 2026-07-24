@@ -545,13 +545,18 @@ async function loadWorkingDays() {
     const container = document.getElementById('dateBtns');
     if (!container) return;
     try {
-        const res  = await fetch('/api/working-days');
-        const data = await res.json();
+        // Pass service param so server can skip today for oil_full
+        const service = bookingState.selectedService || '';
+        const params  = service ? `?service=${service}` : '';
+        const res     = await fetch(`/api/working-days${params}`);
+        const data    = await res.json();
         renderDateButtons(data.days);
     } catch {
         // Server not available (local file mode) — generate client-side
         const days = [];
         const d = new Date(); d.setHours(0,0,0,0);
+        // If oil_full selected, skip today
+        if (bookingState.selectedService === 'oil_full') d.setDate(d.getDate() + 1);
         while (days.length < 9) {
             if (d.getDay() !== 0) days.push(toLocalDateStr(d));
             d.setDate(d.getDate() + 1);
@@ -695,6 +700,18 @@ function selectBookingService(serviceId, serviceName, price) {
         } else {
             vinWrap.classList.add('hidden');
         }
+    }
+
+    // If oil_full is selected, clear selected time and reload days (skip today)
+    if (serviceId === 'oil_full' && bookingState.selectedDate) {
+        bookingState.selectedDate = '';
+        bookingState.selectedTime = '';
+        document.querySelectorAll('.date-btn').forEach(btn => {
+            btn.classList.remove('bg-brandCyan', 'text-black', 'border-brandCyan');
+        });
+        const ts = document.getElementById('timeSlotsBtns');
+        if (ts) ts.innerHTML = `<div class="col-span-4 text-slate-400 text-sm py-2">Selecciona primero una fecha</div>`;
+        loadWorkingDays();
     }
 }
 

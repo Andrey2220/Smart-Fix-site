@@ -108,11 +108,14 @@ function validateBooking(body) {
     if (!/^[A-Z0-9\s\-]{3,10}$/i.test(plate))   return 'Matrícula inválida';
     if (!['ac','wash','oil'].includes(serviceCategory)) return 'Categoría inválida';
 
-    // No pasado
+    // No pasado (oil_full needs +1 day for delivery)
     const d = new Date(date + 'T12:00:00');
     const today = new Date(); today.setHours(0,0,0,0);
     if (d < today)       return 'No puedes reservar fechas pasadas';
     if (d.getDay() === 0) return 'Estamos cerrados los domingos';
+    if (service === 'oil_full' && d.getTime() === today.getTime()) {
+        return 'El servicio completo de cambio de aceite requiere pedir materiales. Selecciona una fecha a partir de mañana.';
+    }
 
     return null;
 }
@@ -165,9 +168,13 @@ function toLocalDateStr(d) {
 }
 
 app.get('/api/working-days', (req, res) => {
+    const { service } = req.query;
     const days = [];
     const d = new Date();
     d.setHours(0, 0, 0, 0);
+    // oil_full needs 1 day to order oil & filters — skip today
+    const skipToday = service === 'oil_full';
+    if (skipToday) d.setDate(d.getDate() + 1);
     while (days.length < 9) {
         if (d.getDay() !== 0) days.push(toLocalDateStr(d));  // no domingo
         d.setDate(d.getDate() + 1);
