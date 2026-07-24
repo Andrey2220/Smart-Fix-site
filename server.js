@@ -258,10 +258,23 @@ app.post('/api/booking', bookingLimiter, (req, res) => {
     res.json({ success: true, id: booking.id });
 });
 
-// ── API: Todas las reservas (admin) ──────────
+// ── API: Todas las reservas activas (admin) ──
 app.get('/api/bookings', requireAdmin, (req, res) => {
     const rows = db.prepare(
-        'SELECT * FROM bookings ORDER BY date ASC, time ASC'
+        "SELECT * FROM bookings WHERE status NOT IN ('done','cancelled') ORDER BY date ASC, time ASC"
+    ).all();
+    res.json(rows.map(b => ({
+        ...b,
+        serviceName:     b.service_name,
+        serviceCategory: b.service_category,
+        createdAt:       b.created_at
+    })));
+});
+
+// ── API: Archivo (reservas finalizadas/canceladas) ──
+app.get('/api/bookings/archived', requireAdmin, (req, res) => {
+    const rows = db.prepare(
+        "SELECT * FROM bookings WHERE status IN ('done','cancelled') ORDER BY date DESC, time ASC"
     ).all();
     res.json(rows.map(b => ({
         ...b,
